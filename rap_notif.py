@@ -119,7 +119,10 @@ HELP_TEXT = (
     "🤖 <b>Commandes Rap Notif</b>\n\n"
     "/add NomArtiste — suivre un nouvel artiste\n"
     "/remove NomArtiste — arrêter de suivre un artiste\n"
-    "/last NomArtiste — voir sa dernière sortie (marche avec n'importe quel artiste)\n"
+    "/last NomArtiste — sa dernière sortie (n'importe quel artiste)\n"
+    "/top NomArtiste — ses 5 sons les plus écoutés\n"
+    "/news NomArtiste — ses 3 derniers articles d'actu\n"
+    "/stats — les stats du mois\n"
     "/list — voir les artistes suivis\n"
     "/help — afficher cette aide\n\n"
     "<i>Je me réveille toutes les ~15-20 min, donc tes commandes "
@@ -216,6 +219,57 @@ def process_telegram_commands(state: dict):
             except Exception as e:
                 report_error(f"/last {arg}", e)
 
+        elif cmd == "/top" and arg:
+            try:
+                artist = resolve_deezer_artist(arg, state)
+                if artist is None:
+                    send_telegram(f"❌ Je trouve pas <b>{arg}</b> sur Deezer, vérifie l'orthographe.")
+                    continue
+                tracks = get_deezer_top_tracks(artist["id"])
+                if not tracks:
+                    send_telegram(f"ℹ️ Aucun son trouvé pour <b>{artist['name']}</b>.")
+                    continue
+                lines = "\n".join(
+                    f"{i}. <a href=\"{t.get('link', '')}\">{t['title']}</a>"
+                    for i, t in enumerate(tracks, 1)
+                )
+                send_telegram(f"🏆 <b>Top 5 — {artist['name']}</b>\n\n{lines}")
+                print(f"[CMD] /top {artist['name']}")
+            except Exception as e:
+                report_error(f"/top {arg}", e)
+
+        elif cmd == "/news" and arg:
+            try:
+                articles = get_news(arg)
+                if not articles:
+                    send_telegram(f"ℹ️ Aucun article récent trouvé pour <b>{arg}</b>.")
+                    continue
+                lines = "\n\n".join(
+                    f"• <a href=\"{a['link']}\">{a['title']}</a>"
+                    for a in articles[:3]
+                )
+                send_telegram(f"📰 <b>Dernières actus — {arg}</b>\n\n{lines}")
+                print(f"[CMD] /news {arg}")
+            except Exception as e:
+                report_error(f"/news {arg}", e)
+
+        elif cmd == "/stats":
+            from datetime import datetime, timezone
+            month = datetime.now(timezone.utc).strftime("%Y-%m")
+            stats = state.get("stats", {}).get(month, {})
+            total = stats.get("releases", 0)
+            per_artist = stats.get("per_artist", {})
+            if total == 0:
+                send_telegram(f"📊 <b>Stats du mois</b>\n\nAucune sortie notifiée ce mois-ci pour l'instant. Ça va venir 🎤")
+            else:
+                ranking = sorted(per_artist.items(), key=lambda x: -x[1])
+                lines = "\n".join(f"• {name} : {n}" for name, n in ranking)
+                send_telegram(
+                    f"📊 <b>Stats du mois</b>\n\n"
+                    f"🎵 {total} sortie(s) notifiée(s)\n\n{lines}"
+                )
+            print("[CMD] /stats")
+
         elif cmd == "/list":
             current = get_current_artists(state)
             listing = "\n".join(f"• {a}" for a in current) or "(aucun)"
@@ -262,6 +316,12 @@ def resolve_deezer_artist(name: str, state: dict) -> dict | None:
 def get_deezer_releases(artist_id: int) -> list[dict]:
     """Recupere les 25 dernieres sorties d'un artiste sur Deezer."""
     data = deezer_get(f"https://api.deezer.com/artist/{artist_id}/albums?limit=25")
+    return data.get("data", [])
+
+
+def get_deezer_top_tracks(artist_id: int, limit: int = 5) -> list[dict]:
+    """Recupere les sons les plus ecoutes d'un artiste sur Deezer."""
+    data = deezer_get(f"https://api.deezer.com/artist/{artist_id}/top?limit={limit}")
     return data.get("data", [])
 
 
@@ -431,6 +491,13 @@ def main():
             else:
                 send_telegram(caption)
             print(f"[NOTIF] Sortie: {artist['name']} - {rel['title']}")
+
+            # Stats mensuelles
+            from datetime import datetime, timezone
+            month = datetime.now(timezone.utc).strftime("%Y-%m")
+            month_stats = state.setdefault("stats", {}).setdefault(month, {"releases": 0, "per_artist": {}})
+            month_stats["releases"] += 1
+            month_stats["per_artist"][artist["name"]] = month_stats["per_artist"].get(artist["name"], 0) + 1
 
         if artist_init:
             state["init_release_artists"].append(name)
