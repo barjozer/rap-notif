@@ -119,6 +119,7 @@ HELP_TEXT = (
     "🤖 <b>Commandes Rap Notif</b>\n\n"
     "/add NomArtiste — suivre un nouvel artiste\n"
     "/remove NomArtiste — arrêter de suivre un artiste\n"
+    "/last NomArtiste — voir sa dernière sortie (marche avec n'importe quel artiste)\n"
     "/list — voir les artistes suivis\n"
     "/help — afficher cette aide\n\n"
     "<i>Je me réveille toutes les ~15-20 min, donc tes commandes "
@@ -186,6 +187,34 @@ def process_telegram_commands(state: dict):
             ]
             send_telegram(f"🗑 <b>{match}</b> retiré, tu ne recevras plus ses sorties.")
             print(f"[CMD] /remove {match}")
+
+        elif cmd == "/last" and arg:
+            try:
+                artist = resolve_deezer_artist(arg, state)
+                if artist is None:
+                    send_telegram(f"❌ Je trouve pas <b>{arg}</b> sur Deezer, vérifie l'orthographe.")
+                    continue
+                releases = get_deezer_releases(artist["id"])
+                if not releases:
+                    send_telegram(f"ℹ️ Aucune sortie trouvée pour <b>{artist['name']}</b>.")
+                    continue
+                # La plus recente par date de sortie
+                latest = max(releases, key=lambda r: r.get("release_date", ""))
+                label = format_release_label(latest.get("record_type", ""))
+                caption = (
+                    f"{label} — <b>{artist['name']}</b> (dernière sortie)\n\n"
+                    f"<b>{latest['title']}</b>\n"
+                    f"📅 {latest.get('release_date', '?')}\n"
+                    f"🔗 {latest.get('link', artist['link'])}"
+                )
+                cover = latest.get("cover_xl") or latest.get("cover_big") or latest.get("cover")
+                if cover:
+                    send_telegram_photo(cover, caption)
+                else:
+                    send_telegram(caption)
+                print(f"[CMD] /last {artist['name']} -> {latest['title']}")
+            except Exception as e:
+                report_error(f"/last {arg}", e)
 
         elif cmd == "/list":
             current = get_current_artists(state)
