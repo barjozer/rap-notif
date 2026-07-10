@@ -1,13 +1,14 @@
 """
-Rap Notif v3.1 - Surveille pour chaque artiste :
+Rap Notif v4 - Surveille pour chaque artiste :
   - Sorties Deezer (albums, singles, EPs) — API publique, aucune cle requise
   - Clips / videos YouTube (via flux RSS, sans cle API)
   - Actu Google News
 et envoie une notification Telegram des qu'il y a du nouveau.
 
-v3.1 : initialisation PAR ARTISTE — quand un nouvel artiste est ajoute,
-son catalogue existant est memorise silencieusement au premier passage,
-puis seules ses vraies nouveautes sont notifiees ensuite.
+Nouveautes v4 :
+  - Pochettes d'albums affichees dans les notifs de sorties
+  - Commandes Telegram : /add NomArtiste, /remove NomArtiste, /list, /help
+    (traitees a chaque reveil du bot, donc effet sous ~15-20 min)
 """
 
 import json
@@ -22,8 +23,9 @@ import requests
 # CONFIGURATION
 # ============================================================
 
-# Artistes a suivre : juste leurs noms, le script trouve tout seul
+# Artistes de base : juste leurs noms, le script trouve tout seul
 # leur profil Deezer (et te confirme lequel il a trouve).
+# Tu peux aussi en ajouter/retirer depuis Telegram avec /add et /remove.
 ARTISTS = [
     "Ninho",
     "SDM",
@@ -38,10 +40,15 @@ ARTISTS = [
     "Gazo",
 ]
 
+# Artistes pour lesquels tu veux recevoir l'actu Google News.
+# Les sorties Deezer restent surveillees pour TOUS les artistes,
+# mais l'actu n'est envoyee que pour ceux listes ici.
+NEWS_ARTISTS = [
+    "Bouss",
+]
+
 # Chaines YouTube a suivre (clips) : "Nom affiche": "ID de la chaine"
-# Pour trouver l'ID d'une chaine : va sur la chaine -> ...plus (description)
-# -> Partager la chaine -> Copier l'ID de la chaine (commence par UC...)
-# Laisser vide {} si tu veux pas suivre YouTube.
+# (ID = va sur la chaine -> ...plus -> Partager la chaine -> Copier l'ID, commence par UC)
 YOUTUBE_CHANNELS = {
     # "Ninho": "UCzH3iPCUyoVpnHtcnBCRDMw",
 }
@@ -52,14 +59,6 @@ IGNORE_COMPILATIONS = True
 # Anti-doublons : ignore une sortie si un titre quasi identique
 # a deja ete notifie (versions sped up, edit, remix du meme single...)
 SMART_DEDUP = True
-
-# Artistes pour lesquels tu veux recevoir l'actu Google News.
-# Les sorties Deezer restent surveillees pour TOUS les artistes de ARTISTS,
-# mais l'actu n'est envoyee que pour ceux listes ici.
-# Mettre NEWS_ARTISTS = ARTISTS pour recevoir l'actu de tout le monde.
-NEWS_ARTISTS = [
-    "Bouss",
-]
 
 # Mots-cles pour filtrer l'actu Google News (laisser vide [] = tout recevoir)
 NEWS_KEYWORDS = ["album", "sortie", "single", "clip", "feat", "featuring", "concert", "tournée", "annonce"]
@@ -72,6 +71,7 @@ TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 STATE_FILE = Path(__file__).parent / "state.json"
+TG_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 
 # ============================================================
@@ -79,8 +79,7 @@ STATE_FILE = Path(__file__).parent / "state.json"
 # ============================================================
 
 def send_telegram(text: str):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    resp = requests.post(url, json={
+    resp = requests.post(f"{TG_API}/sendMessage", json={
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
         "parse_mode": "HTML",
@@ -90,14 +89,111 @@ def send_telegram(text: str):
         print(f"[ERREUR TELEGRAM] {resp.status_code}: {resp.text}")
 
 
+def send_telegram_photo(photo_url: str, caption: str):
+    """Envoie une notif avec image (pochette). Retombe sur du texte si echec."""
+    resp = requests.post(f"{TG_API}/sendPhoto", json={
+        "chat_id": TELEGRAM_CHAT_ID,
+        "photo": photo_url,
+        "caption": caption,
+        "parse_mode": "HTML",
+    }, timeout=20)
+    if not resp.ok:
+        print(f"[ERREUR TELEGRAM PHOTO] {resp.status_code}: {resp.text}")
+        send_telegram(caption)
+
+
 def report_error(context: str, error: Exception):
-    """Log l'erreur et previent sur Telegram si active."""
     print(f"[ERREUR] {context}: {error}")
     if NOTIFY_ON_ERROR:
         try:
             send_telegram(f"⚠️ <b>Rap Notif — erreur</b>\n\n{context}\n<code>{str(error)[:300]}</code>")
         except Exception:
             pass
+
+
+# ============================================================
+# COMMANDES TELEGRAM (/add, /remove, /list, /help)
+# ============================================================
+
+HELP_TEXT = (
+    "🤖 <b>Commandes Rap Notif</b>\n\n"
+    "/add NomArtiste — suivre un nouvel artiste\n"
+    "/remove NomArtiste — arrêter de suivre un artiste\n"
+    "/list — voir les artistes suivis\n"
+    "/help — afficher cette aide\n\n"
+    "<i>Je me réveille toutes les ~15-20 min, donc tes commandes "
+    "sont prises en compte au réveil suivant.</i>"
+)
+
+
+def get_current_artists(state: dict) -> list[str]:
+    """Liste effective = artistes du code + ajouts Telegram - retraits Telegram."""
+    added = state.get("added_artists", [])
+    removed = [r.lower() for r in state.get("removed_artists", [])]
+    merged = list(ARTISTS)
+    for a in added:
+        if a.lower() not in [m.lower() for m in merged]:
+            merged.append(a)
+    return [a for a in merged if a.lower() not in removed]
+
+
+def process_telegram_commands(state: dict):
+    """Lit les nouveaux messages Telegram et applique les commandes."""
+    offset = state.get("tg_offset", 0)
+    try:
+        resp = requests.get(f"{TG_API}/getUpdates", params={"offset": offset, "timeout": 0}, timeout=15)
+        resp.raise_for_status()
+        updates = resp.json().get("result", [])
+    except Exception as e:
+        report_error("Lecture des commandes Telegram", e)
+        return
+
+    for upd in updates:
+        state["tg_offset"] = upd["update_id"] + 1
+        msg = upd.get("message") or {}
+        chat_id = str((msg.get("chat") or {}).get("id", ""))
+        text = (msg.get("text") or "").strip()
+
+        # Securite : on n'accepte les commandes que depuis TON chat
+        if chat_id != str(TELEGRAM_CHAT_ID) or not text.startswith("/"):
+            continue
+
+        parts = text.split(maxsplit=1)
+        cmd = parts[0].lower().split("@")[0]
+        arg = parts[1].strip() if len(parts) > 1 else ""
+
+        if cmd == "/add" and arg:
+            current = get_current_artists(state)
+            if arg.lower() in [a.lower() for a in current]:
+                send_telegram(f"ℹ️ <b>{arg}</b> est déjà suivi.")
+                continue
+            state.setdefault("added_artists", []).append(arg)
+            state["removed_artists"] = [
+                r for r in state.get("removed_artists", []) if r.lower() != arg.lower()
+            ]
+            send_telegram(f"✅ <b>{arg}</b> ajouté ! Je cherche son profil Deezer...")
+            print(f"[CMD] /add {arg}")
+
+        elif cmd == "/remove" and arg:
+            current = get_current_artists(state)
+            match = next((a for a in current if a.lower() == arg.lower()), None)
+            if match is None:
+                send_telegram(f"ℹ️ <b>{arg}</b> n'est pas dans la liste. Envoie /list pour voir les artistes suivis.")
+                continue
+            state.setdefault("removed_artists", []).append(match)
+            state["added_artists"] = [
+                a for a in state.get("added_artists", []) if a.lower() != match.lower()
+            ]
+            send_telegram(f"🗑 <b>{match}</b> retiré, tu ne recevras plus ses sorties.")
+            print(f"[CMD] /remove {match}")
+
+        elif cmd == "/list":
+            current = get_current_artists(state)
+            listing = "\n".join(f"• {a}" for a in current) or "(aucun)"
+            send_telegram(f"🎤 <b>Artistes suivis ({len(current)})</b>\n\n{listing}")
+
+        else:
+            send_telegram(HELP_TEXT)
 
 
 # ============================================================
@@ -150,8 +246,7 @@ def format_release_label(record_type: str) -> str:
 
 
 def normalize_title(title: str) -> str:
-    """Normalise un titre pour detecter les doublons :
-    'Jolie (Sped Up)' et 'Jolie - Edit' -> 'jolie'"""
+    """'Jolie (Sped Up)' et 'Jolie - Edit' -> 'jolie'"""
     t = title.lower()
     t = re.sub(r"[\(\[].*?[\)\]]", "", t)
     t = t.split(" - ")[0]
@@ -169,7 +264,6 @@ ATOM_NS = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml
 
 
 def get_youtube_videos(channel_id: str) -> list[dict]:
-    """Recupere les 15 dernieres videos d'une chaine via son flux RSS."""
     url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
     resp = requests.get(url, timeout=15)
     resp.raise_for_status()
@@ -228,10 +322,12 @@ def load_state() -> dict:
     state.setdefault("videos", [])
     state.setdefault("news", [])
     state.setdefault("deezer_artists", {})
-    # Listes des sources deja initialisees (catalogue existant memorise)
     state.setdefault("init_release_artists", [])
     state.setdefault("init_video_channels", [])
     state.setdefault("init_news_artists", [])
+    state.setdefault("added_artists", [])
+    state.setdefault("removed_artists", [])
+    state.setdefault("tg_offset", 0)
     return state
 
 
@@ -247,10 +343,15 @@ def save_state(state: dict):
 
 def main():
     state = load_state()
+
+    # 1) Traiter les commandes Telegram recues depuis le dernier passage
+    process_telegram_commands(state)
+
+    artists = get_current_artists(state)
     newly_resolved = []
 
-    # --- Deezer (sorties) ---
-    for name in ARTISTS:
+    # 2) Deezer (sorties)
+    for name in artists:
         try:
             was_cached = name in state["deezer_artists"]
             artist = resolve_deezer_artist(name, state)
@@ -265,8 +366,7 @@ def main():
             report_error(f"Deezer — {name}", e)
             continue
 
-        # Premier passage pour CET artiste : on memorise son catalogue
-        # existant sans notifier, puis on le marque comme initialise.
+        # Premier passage pour CET artiste : memorisation silencieuse du catalogue
         artist_init = name not in state["init_release_artists"]
 
         for rel in releases:
@@ -290,20 +390,24 @@ def main():
                 continue
 
             label = format_release_label(record_type)
-            msg = (
+            caption = (
                 f"{label} — <b>{artist['name']}</b>\n\n"
                 f"<b>{rel['title']}</b>\n"
                 f"📅 {rel.get('release_date', '?')}\n"
                 f"🔗 {rel.get('link', artist['link'])}"
             )
-            send_telegram(msg)
+            cover = rel.get("cover_xl") or rel.get("cover_big") or rel.get("cover")
+            if cover:
+                send_telegram_photo(cover, caption)
+            else:
+                send_telegram(caption)
             print(f"[NOTIF] Sortie: {artist['name']} - {rel['title']}")
 
         if artist_init:
             state["init_release_artists"].append(name)
             print(f"[INIT] Catalogue memorise pour {name}")
 
-    # --- YouTube ---
+    # 3) YouTube
     for name, channel_id in YOUTUBE_CHANNELS.items():
         try:
             videos = get_youtube_videos(channel_id)
@@ -332,8 +436,10 @@ def main():
             state["init_video_channels"].append(channel_id)
             print(f"[INIT] Videos memorisees pour {name}")
 
-    # --- Google News ---
+    # 4) Google News (uniquement pour NEWS_ARTISTS, s'ils sont toujours suivis)
     for name in NEWS_ARTISTS:
+        if name.lower() not in [a.lower() for a in artists]:
+            continue
         try:
             articles = get_news(name)
         except Exception as e:
@@ -365,7 +471,7 @@ def main():
 
     save_state(state)
 
-    # Confirmation des artistes trouves sur Deezer (une seule fois par artiste)
+    # 5) Confirmation des artistes nouvellement trouves sur Deezer
     if newly_resolved:
         lines = "\n".join(f"• <a href=\"{a['link']}\">{a['name']}</a>" for a in newly_resolved)
         send_telegram(
