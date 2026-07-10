@@ -27,6 +27,14 @@ ARTISTS = [
     "Ninho",
     "SDM",
     "Bouss",
+    "Tiakola",
+    "Werenoi",
+    "Landy",
+    "L2B",
+    "Djadja & Dinaz",
+    "Maes",
+    "Leto",
+    "Gazo",
 ]
 
 # Chaines YouTube a suivre (clips) : "Nom affiche": "ID de la chaine"
