@@ -763,5 +763,25 @@
       "name": "Gazo",
       "link": "https://www.deezer.com/artist/8873540"
     }
-  }
+  },
+  "init_release_artists": [
+    "Ninho",
+    "SDM",
+    "Bouss",
+    "Tiakola",
+    "Werenoi",
+    "Landy",
+    "L2B",
+    "Djadja & Dinaz",
+    "Maes",
+    "Leto",
+    "Gazo"
+  ],
+  "init_video_channels": [],
+  "init_news_artists": [
+    "Bouss"
+  ],
+  "added_artists": [],
+  "removed_artists": [],
+  "tg_offset": 141997610
 }
