@@ -1,9 +1,12 @@
 """
-Rap Notif v2 - Surveille pour chaque artiste :
-  - Sorties Spotify (albums, singles ET feats)
+Rap Notif v3 - Surveille pour chaque artiste :
+  - Sorties Deezer (albums, singles, EPs) — API publique, aucune cle requise
   - Clips / videos YouTube (via flux RSS, sans cle API)
   - Actu Google News
 et envoie une notification Telegram des qu'il y a du nouveau.
+
+(v3 : passage de Spotify a Deezer, car Spotify a restreint son API
+pour les nouvelles apps developpeur.)
 """
 
 import json
@@ -18,24 +21,23 @@ import requests
 # CONFIGURATION
 # ============================================================
 
-# Artistes a suivre : "Nom affiche": "ID Spotify"
-# Pour trouver l'ID : profil Spotify -> Partager -> Copier le lien
-# https://open.spotify.com/artist/6Te49r3A6f5BiIgBRxH7FH?si=xxx -> 6Te49r3A6f5BiIgBRxH7FH
-ARTISTS = {
-    "Ninho": "6Te49r3A6f5BiIgBRxH7FH",
-    "SDM": "0LKAV3zJ8a8AIGnyc5OvfB",
-    "Bouss": "3hWQDRr1PqwvnHeiZlucBq",
-}
+# Artistes a suivre : juste leurs noms, le script trouve tout seul
+# leur profil Deezer (et te confirme lequel il a trouve).
+ARTISTS = [
+    "Ninho",
+    "SDM",
+    "Bouss",
+]
 
 # Chaines YouTube a suivre (clips) : "Nom affiche": "ID de la chaine"
-# Pour trouver l'ID d'une chaine : va sur la chaine -> ...plus (dans la description)
+# Pour trouver l'ID d'une chaine : va sur la chaine -> ...plus (description)
 # -> Partager la chaine -> Copier l'ID de la chaine (commence par UC...)
 # Laisser vide {} si tu veux pas suivre YouTube.
 YOUTUBE_CHANNELS = {
     # "Ninho": "UCzH3iPCUyoVpnHtcnBCRDMw",
 }
 
-# Ignorer les compilations/playlists editoriales dans les feats (recommande)
+# Ignorer les compilations dans les sorties (recommande)
 IGNORE_COMPILATIONS = True
 
 # Anti-doublons : ignore une sortie si un titre quasi identique
@@ -51,8 +53,6 @@ NOTIFY_ON_ERROR = True
 # Secrets (passes en variables d'environnement, JAMAIS en dur dans le code)
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
-SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
-SPOTIFY_CLIENT_SECRET = os.environ["SPOTIFY_CLIENT_SECRET"]
 
 STATE_FILE = Path(__file__).parent / "state.json"
 
@@ -84,54 +84,61 @@ def report_error(context: str, error: Exception):
 
 
 # ============================================================
-# SPOTIFY
+# DEEZER (API publique, aucune cle requise)
 # ============================================================
 
-def get_spotify_token() -> str:
-    resp = requests.post(
-        "https://accounts.spotify.com/api/token",
-        data={"grant_type": "client_credentials"},
-        auth=(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET),
-        timeout=15,
-    )
+def deezer_get(url: str) -> dict:
+    resp = requests.get(url, timeout=15)
     resp.raise_for_status()
-    return resp.json()["access_token"]
+    data = resp.json()
+    if isinstance(data, dict) and "error" in data:
+        raise RuntimeError(f"Deezer: {data['error']}")
+    return data
 
 
-def get_artist_releases(token: str, artist_id: str) -> list[dict]:
-    """Recupere les 20 dernieres sorties d'un artiste :
-    albums, singles ET apparitions en feat sur les projets d'autres artistes."""
-    url = f"https://api.spotify.com/v1/artists/{artist_id}/albums"
-    resp = requests.get(
-        url,
-        headers={"Authorization": f"Bearer {token}"},
-        params={
-            "include_groups": "album,single,appears_on",
-            "limit": 20,
-            "market": "FR",
-        },
-        timeout=15,
-    )
-    resp.raise_for_status()
-    return resp.json().get("items", [])
+def resolve_deezer_artist(name: str, state: dict) -> dict | None:
+    """Trouve l'artiste Deezer correspondant au nom (avec cache).
+    Retourne {"id": ..., "name": ..., "link": ...} ou None."""
+    cache = state.setdefault("deezer_artists", {})
+    if name in cache:
+        return cache[name]
+
+    query = requests.utils.quote(name)
+    data = deezer_get(f"https://api.deezer.com/search/artist?q={query}&limit=1")
+    results = data.get("data", [])
+    if not results:
+        return None
+
+    artist = {
+        "id": results[0]["id"],
+        "name": results[0]["name"],
+        "link": results[0].get("link", f"https://www.deezer.com/artist/{results[0]['id']}"),
+    }
+    cache[name] = artist
+    return artist
 
 
-def format_release_label(rel: dict) -> str:
-    if rel.get("album_group") == "appears_on":
-        return "🤝 Feat / Apparition"
-    if rel["album_type"] == "album":
-        return "💿 Album"
-    return "🎵 Single"
+def get_deezer_releases(artist_id: int) -> list[dict]:
+    """Recupere les 25 dernieres sorties d'un artiste sur Deezer."""
+    data = deezer_get(f"https://api.deezer.com/artist/{artist_id}/albums?limit=25")
+    return data.get("data", [])
+
+
+def format_release_label(record_type: str) -> str:
+    return {
+        "album": "💿 Album",
+        "single": "🎵 Single",
+        "ep": "🎶 EP",
+        "compile": "📦 Compilation",
+    }.get(record_type, "🎵 Sortie")
 
 
 def normalize_title(title: str) -> str:
     """Normalise un titre pour detecter les doublons :
     'Jolie (Sped Up)' et 'Jolie - Edit' -> 'jolie'"""
     t = title.lower()
-    # retire tout ce qui est entre parentheses/crochets et apres un tiret
     t = re.sub(r"[\(\[].*?[\)\]]", "", t)
     t = t.split(" - ")[0]
-    # retire les mots-versions courants
     for w in ["sped up", "slowed", "remix", "edit", "version", "instrumental", "acoustic", "live"]:
         t = t.replace(w, "")
     t = re.sub(r"[^a-z0-9à-ÿ]+", "", t)
@@ -198,16 +205,18 @@ def news_matches_keywords(title: str) -> bool:
 def load_state() -> dict:
     if STATE_FILE.exists():
         state = json.loads(STATE_FILE.read_text())
-        state.setdefault("releases", [])
-        state.setdefault("titles", [])
-        state.setdefault("videos", [])
-        state.setdefault("news", [])
-        return state
-    return {"releases": [], "titles": [], "videos": [], "news": []}
+    else:
+        state = {}
+    state.setdefault("releases", [])
+    state.setdefault("titles", [])
+    state.setdefault("videos", [])
+    state.setdefault("news", [])
+    state.setdefault("deezer_artists", {})
+    return state
 
 
 def save_state(state: dict):
-    for key in state:
+    for key in ["releases", "titles", "videos", "news"]:
         state[key] = state[key][-500:]
     STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False))
 
@@ -218,52 +227,59 @@ def save_state(state: dict):
 
 def main():
     state = load_state()
-    first_run = not STATE_FILE.exists()
 
-    # --- Spotify ---
-    try:
-        token = get_spotify_token()
-    except Exception as e:
-        report_error("Connexion Spotify impossible (verifie CLIENT_ID/SECRET)", e)
-        token = None
+    # Mode initialisation par source : si la liste est vide, on enregistre
+    # tout l'existant sans notifier (evite le spam au premier passage).
+    releases_init = len(state["releases"]) == 0
+    videos_init = len(state["videos"]) == 0
+    news_init = len(state["news"]) == 0
+    newly_resolved = []
 
-    if token:
-        for name, artist_id in ARTISTS.items():
-            try:
-                releases = get_artist_releases(token, artist_id)
-            except Exception as e:
-                report_error(f"Spotify — {name}", e)
+    # --- Deezer (sorties) ---
+    for name in ARTISTS:
+        try:
+            was_cached = name in state["deezer_artists"]
+            artist = resolve_deezer_artist(name, state)
+            if artist is None:
+                report_error(f"Deezer — {name}", RuntimeError("artiste introuvable sur Deezer"))
+                continue
+            if not was_cached:
+                newly_resolved.append(artist)
+
+            releases = get_deezer_releases(artist["id"])
+        except Exception as e:
+            report_error(f"Deezer — {name}", e)
+            continue
+
+        for rel in releases:
+            rel_id = str(rel["id"])
+            if rel_id in state["releases"]:
+                continue
+            state["releases"].append(rel_id)
+
+            norm = f"{name}:{normalize_title(rel['title'])}"
+            is_dup = SMART_DEDUP and norm in state["titles"]
+            state["titles"].append(norm)
+
+            if releases_init:
+                continue
+            record_type = rel.get("record_type", "")
+            if IGNORE_COMPILATIONS and record_type == "compile":
+                print(f"[IGNORE] Compilation: {rel['title']}")
+                continue
+            if is_dup:
+                print(f"[IGNORE] Doublon: {rel['title']}")
                 continue
 
-            for rel in releases:
-                if rel["id"] in state["releases"]:
-                    continue
-                state["releases"].append(rel["id"])
-
-                norm = f"{name}:{normalize_title(rel['name'])}"
-                is_dup = SMART_DEDUP and norm in state["titles"]
-                state["titles"].append(norm)
-
-                if first_run:
-                    continue
-                if IGNORE_COMPILATIONS and rel["album_type"] == "compilation":
-                    print(f"[IGNORE] Compilation: {rel['name']}")
-                    continue
-                if is_dup:
-                    print(f"[IGNORE] Doublon: {rel['name']}")
-                    continue
-
-                label = format_release_label(rel)
-                main_artists = ", ".join(a["name"] for a in rel.get("artists", []))
-                msg = (
-                    f"{label} — <b>{name}</b>\n\n"
-                    f"<b>{rel['name']}</b>\n"
-                    f"👤 {main_artists}\n"
-                    f"📅 {rel['release_date']}\n"
-                    f"🔗 {rel['external_urls']['spotify']}"
-                )
-                send_telegram(msg)
-                print(f"[NOTIF] Sortie: {name} - {rel['name']} ({rel.get('album_group')})")
+            label = format_release_label(record_type)
+            msg = (
+                f"{label} — <b>{artist['name']}</b>\n\n"
+                f"<b>{rel['title']}</b>\n"
+                f"📅 {rel.get('release_date', '?')}\n"
+                f"🔗 {rel.get('link', artist['link'])}"
+            )
+            send_telegram(msg)
+            print(f"[NOTIF] Sortie: {artist['name']} - {rel['title']}")
 
     # --- YouTube ---
     for name, channel_id in YOUTUBE_CHANNELS.items():
@@ -277,7 +293,7 @@ def main():
             if vid["id"] in state["videos"]:
                 continue
             state["videos"].append(vid["id"])
-            if first_run:
+            if videos_init:
                 continue
 
             msg = (
@@ -300,7 +316,7 @@ def main():
             if art["id"] in state["news"]:
                 continue
             state["news"].append(art["id"])
-            if first_run:
+            if news_init:
                 continue
             if not news_matches_keywords(art["title"]):
                 continue
@@ -314,12 +330,17 @@ def main():
             print(f"[NOTIF] Actu: {art['title']}")
 
     save_state(state)
-    if first_run:
+
+    # Confirmation des artistes trouves sur Deezer (une seule fois par artiste)
+    if newly_resolved:
+        lines = "\n".join(f"• <a href=\"{a['link']}\">{a['name']}</a>" for a in newly_resolved)
         send_telegram(
-            "✅ Rap Notif v2 est actif !\n"
-            "Tu recevras une notif dès qu'il y a du nouveau : sorties Spotify, feats, clips YouTube et actu."
+            f"🎧 <b>Rap Notif v3 (Deezer)</b>\n\n"
+            f"Artistes surveillés :\n{lines}\n\n"
+            f"Clique sur chaque nom pour vérifier que c'est le bon artiste. "
+            f"Les notifs de sorties démarrent au prochain passage."
         )
-        print("[INIT] Premier lancement : etat initialise, notifications actives au prochain run.")
+        print("[INIT] Artistes Deezer resolus:", [a["name"] for a in newly_resolved])
 
 
 if __name__ == "__main__":
