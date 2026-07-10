@@ -1,12 +1,20 @@
+# A placer dans ton repo GitHub sous : .github/workflows/notif.yml
+# NOTE : ce planning suppose un repo PUBLIC (minutes GitHub Actions illimitees).
+# Les crons sont en heure UTC (Paris = UTC+2 en ete, UTC+1 en hiver).
 name: Rap Notif
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
+    # Rythme de base : toutes les 10 minutes
+    - cron: "*/10 * * * *"
+    # Boost sorties du vendredi : toutes les 5 min
+    # du jeudi 21h UTC (23h Paris) au vendredi 01h UTC (03h Paris)
+    - cron: "*/5 21-23 * * 4"
+    - cron: "*/5 0-1 * * 5"
+  workflow_dispatch:          # lancement manuel depuis GitHub
 
 permissions:
-  contents: write
+  contents: write             # necessaire pour sauvegarder state.json
 
 jobs:
   check:
@@ -25,8 +33,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: python rap_notif.py
 
       - name: Sauvegarder l'etat
