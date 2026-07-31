@@ -271,7 +271,9 @@
     "675640271",
     "950922781",
     "950922801",
-    "950955021"
+    "950955021",
+    "1031603282",
+    "1030297132"
   ],
   "titles": [
     "Ninho:mils4",
@@ -545,7 +547,9 @@
     "Gazo:wemby",
     "Landy:kosamui",
     "Landy:rollingstones",
-    "Landy:fastlife"
+    "Landy:fastlife",
+    "Tiakola:petitmatin",
+    "Landy:gg"
   ],
   "videos": [],
   "news": [
@@ -800,9 +804,10 @@
   "tg_offset": 141997616,
   "stats": {
     "2026-07": {
-      "releases": 3,
+      "releases": 5,
       "per_artist": {
-        "Landy": 3
+        "Landy": 4,
+        "Tiakola": 1
       }
     }
   }
