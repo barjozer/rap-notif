@@ -273,7 +273,8 @@
     "950922801",
     "950955021",
     "1031603282",
-    "1030297132"
+    "1030297132",
+    "1028136502"
   ],
   "titles": [
     "Ninho:mils4",
@@ -549,7 +550,8 @@
     "Landy:rollingstones",
     "Landy:fastlife",
     "Tiakola:petitmatin",
-    "Landy:gg"
+    "Landy:gg",
+    "Landy:danscellelà"
   ],
   "videos": [],
   "news": [
@@ -809,6 +811,12 @@
       "per_artist": {
         "Landy": 4,
         "Tiakola": 1
+      }
+    },
+    "2026-08": {
+      "releases": 1,
+      "per_artist": {
+        "Landy": 1
       }
     }
   }
