@@ -274,7 +274,9 @@
     "950955021",
     "1031603282",
     "1030297132",
-    "1028136502"
+    "1028136502",
+    "1054107212",
+    "1061499232"
   ],
   "titles": [
     "Ninho:mils4",
@@ -551,7 +553,9 @@
     "Landy:fastlife",
     "Tiakola:petitmatin",
     "Landy:gg",
-    "Landy:danscellelà"
+    "Landy:danscellelà",
+    "Landy:méchant",
+    "Leto:lululemon"
   ],
   "videos": [],
   "news": [
@@ -816,9 +820,10 @@
       }
     },
     "2026-08": {
-      "releases": 1,
+      "releases": 3,
       "per_artist": {
-        "Landy": 1
+        "Landy": 2,
+        "Leto": 1
       }
     }
   }
