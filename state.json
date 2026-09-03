@@ -276,7 +276,8 @@
     "1030297132",
     "1028136502",
     "1054107212",
-    "1061499232"
+    "1061499232",
+    "1065207261"
   ],
   "titles": [
     "Ninho:mils4",
@@ -555,7 +556,8 @@
     "Landy:gg",
     "Landy:danscellelà",
     "Landy:méchant",
-    "Leto:lululemon"
+    "Leto:lululemon",
+    "Ninho:zodiac"
   ],
   "videos": [],
   "news": [
@@ -833,6 +835,12 @@
       "per_artist": {
         "Landy": 2,
         "Leto": 1
+      }
+    },
+    "2026-09": {
+      "releases": 1,
+      "per_artist": {
+        "Ninho": 1
       }
     }
   }
