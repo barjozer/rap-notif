@@ -279,7 +279,8 @@
     "1061499232",
     "1065207261",
     "1072817222",
-    "961521091"
+    "961521091",
+    "1068201421"
   ],
   "titles": [
     "Ninho:mils4",
@@ -561,7 +562,8 @@
     "Leto:lululemon",
     "Ninho:zodiac",
     "SDM:nzela",
-    "Leto:d1gri"
+    "Leto:d1gri",
+    "Tiakola:25"
   ],
   "videos": [],
   "news": [
@@ -844,11 +846,12 @@
       }
     },
     "2026-09": {
-      "releases": 3,
+      "releases": 4,
       "per_artist": {
         "Ninho": 1,
         "SDM": 1,
-        "Leto": 1
+        "Leto": 1,
+        "Tiakola": 1
       }
     }
   }
