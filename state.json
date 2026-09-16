@@ -280,7 +280,8 @@
     "1065207261",
     "1072817222",
     "961521091",
-    "1068201421"
+    "1068201421",
+    "1073801602"
   ],
   "titles": [
     "Ninho:mils4",
@@ -563,7 +564,8 @@
     "Ninho:zodiac",
     "SDM:nzela",
     "Leto:d1gri",
-    "Tiakola:25"
+    "Tiakola:25",
+    "Djadja & Dinaz:matièrenoire"
   ],
   "videos": [],
   "news": [
@@ -846,12 +848,13 @@
       }
     },
     "2026-09": {
-      "releases": 4,
+      "releases": 5,
       "per_artist": {
         "Ninho": 1,
         "SDM": 1,
         "Leto": 1,
-        "Tiakola": 1
+        "Tiakola": 1,
+        "Djadja & Dinaz": 1
       }
     }
   }
