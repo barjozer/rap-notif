@@ -284,7 +284,14 @@
     "1073801602",
     "1100668542",
     "1103118182",
-    "1103118272"
+    "1103118272",
+    "1103797432",
+    "1103797162",
+    "1103797172",
+    "1103797182",
+    "1103797202",
+    "1103797232",
+    "1103797252"
   ],
   "titles": [
     "Ninho:mils4",
@@ -571,7 +578,14 @@
     "Djadja & Dinaz:matièrenoire",
     "Gazo:kraken",
     "Tiakola:wpointm",
-    "Tiakola:wintermelomusic"
+    "Tiakola:wintermelomusic",
+    "Tiakola:wpointm",
+    "Tiakola:laviedunhomme",
+    "Tiakola:jetlag",
+    "Tiakola:bottega",
+    "Tiakola:vraiog",
+    "Tiakola:lanocturne",
+    "Tiakola:best"
   ],
   "videos": [],
   "news": [
@@ -856,12 +870,12 @@
       }
     },
     "2026-09": {
-      "releases": 8,
+      "releases": 14,
       "per_artist": {
         "Ninho": 1,
         "SDM": 1,
         "Leto": 1,
-        "Tiakola": 3,
+        "Tiakola": 9,
         "Djadja & Dinaz": 1,
         "Gazo": 1
       }
