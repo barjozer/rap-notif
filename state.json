@@ -291,7 +291,8 @@
     "1103797182",
     "1103797202",
     "1103797232",
-    "1103797252"
+    "1103797252",
+    "1104541032"
   ],
   "titles": [
     "Ninho:mils4",
@@ -585,7 +586,8 @@
     "Tiakola:bottega",
     "Tiakola:vraiog",
     "Tiakola:lanocturne",
-    "Tiakola:best"
+    "Tiakola:best",
+    "SDM:pascommeeux"
   ],
   "videos": [],
   "news": [
@@ -870,10 +872,10 @@
       }
     },
     "2026-09": {
-      "releases": 14,
+      "releases": 15,
       "per_artist": {
         "Ninho": 1,
-        "SDM": 1,
+        "SDM": 2,
         "Leto": 1,
         "Tiakola": 9,
         "Djadja & Dinaz": 1,
