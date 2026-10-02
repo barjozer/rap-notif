@@ -293,7 +293,8 @@
     "1103797232",
     "1103797252",
     "1104541032",
-    "1109162202"
+    "1109162202",
+    "1104637272"
   ],
   "titles": [
     "Ninho:mils4",
@@ -589,7 +590,8 @@
     "Tiakola:lanocturne",
     "Tiakola:best",
     "SDM:pascommeeux",
-    "Tiakola:wpointm"
+    "Tiakola:wpointm",
+    "Landy:jencaisse"
   ],
   "videos": [],
   "news": [
@@ -882,6 +884,12 @@
         "Tiakola": 9,
         "Djadja & Dinaz": 1,
         "Gazo": 1
+      }
+    },
+    "2026-10": {
+      "releases": 1,
+      "per_artist": {
+        "Landy": 1
       }
     }
   }
