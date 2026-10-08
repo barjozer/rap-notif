@@ -296,7 +296,8 @@
     "1109162202",
     "1104637272",
     "1112152332",
-    "1115925262"
+    "1115925262",
+    "1112114932"
   ],
   "titles": [
     "Ninho:mils4",
@@ -595,7 +596,8 @@
     "Tiakola:wpointm",
     "Landy:jencaisse",
     "Bouss:merci",
-    "Ninho:bracelet"
+    "Ninho:bracelet",
+    "L2B:cybertesla"
   ],
   "videos": [],
   "news": [
@@ -892,11 +894,12 @@
       }
     },
     "2026-10": {
-      "releases": 3,
+      "releases": 4,
       "per_artist": {
         "Landy": 1,
         "Bouss": 1,
-        "Ninho": 1
+        "Ninho": 1,
+        "L2B": 1
       }
     }
   }
