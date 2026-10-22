@@ -300,7 +300,8 @@
     "1112114932",
     "1111335892",
     "1073084822",
-    "1119582352"
+    "1119582352",
+    "1126679371"
   ],
   "titles": [
     "Ninho:mils4",
@@ -603,7 +604,8 @@
     "L2B:cybertesla",
     "Leto:pineapplept2",
     "Gazo:suprématie",
-    "Bouss:différent"
+    "Bouss:différent",
+    "Bouss:pasderôle"
   ],
   "videos": [],
   "news": [
@@ -900,10 +902,10 @@
       }
     },
     "2026-10": {
-      "releases": 7,
+      "releases": 8,
       "per_artist": {
         "Landy": 1,
-        "Bouss": 2,
+        "Bouss": 3,
         "Ninho": 1,
         "L2B": 1,
         "Leto": 1,
