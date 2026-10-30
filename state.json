@@ -304,7 +304,8 @@
     "1126679371",
     "1122455122",
     "1127281781",
-    "1119299272"
+    "1119299272",
+    "1116981462"
   ],
   "titles": [
     "Ninho:mils4",
@@ -611,7 +612,8 @@
     "Bouss:pasderôle",
     "Leto:cinéma",
     "SDM:professionnels",
-    "Landy:gigilolo"
+    "Landy:gigilolo",
+    "Leto:sls"
   ],
   "videos": [],
   "news": [
@@ -908,13 +910,13 @@
       }
     },
     "2026-10": {
-      "releases": 11,
+      "releases": 12,
       "per_artist": {
         "Landy": 2,
         "Bouss": 3,
         "Ninho": 1,
         "L2B": 1,
-        "Leto": 2,
+        "Leto": 3,
         "Gazo": 1,
         "SDM": 1
       }
