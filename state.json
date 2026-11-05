@@ -306,7 +306,8 @@
     "1127281781",
     "1119299272",
     "1116981462",
-    "1134599981"
+    "1134599981",
+    "1135018371"
   ],
   "titles": [
     "Ninho:mils4",
@@ -615,7 +616,8 @@
     "SDM:professionnels",
     "Landy:gigilolo",
     "Leto:sls",
-    "L2B:chanel"
+    "L2B:chanel",
+    "L2B:fastlife"
   ],
   "videos": [],
   "news": [
@@ -926,9 +928,9 @@
       }
     },
     "2026-11": {
-      "releases": 1,
+      "releases": 2,
       "per_artist": {
-        "L2B": 1
+        "L2B": 2
       }
     }
   }
