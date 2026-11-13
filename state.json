@@ -308,7 +308,8 @@
     "1116981462",
     "1134599981",
     "1135018371",
-    "1132858711"
+    "1132858711",
+    "1132773701"
   ],
   "titles": [
     "Ninho:mils4",
@@ -619,7 +620,8 @@
     "Leto:sls",
     "L2B:chanel",
     "L2B:fastlife",
-    "Djadja & Dinaz:matièrenoire"
+    "Djadja & Dinaz:matièrenoire",
+    "Tiakola:jsuisplusdansça"
   ],
   "videos": [],
   "news": [
@@ -931,9 +933,10 @@
       }
     },
     "2026-11": {
-      "releases": 2,
+      "releases": 3,
       "per_artist": {
-        "L2B": 2
+        "L2B": 2,
+        "Tiakola": 1
       }
     }
   }
