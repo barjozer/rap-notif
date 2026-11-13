@@ -309,7 +309,13 @@
     "1134599981",
     "1135018371",
     "1132858711",
-    "1132773701"
+    "1132773701",
+    "1143579271",
+    "1142273521",
+    "1143579291",
+    "1143587521",
+    "1120569002",
+    "1136897661"
   ],
   "titles": [
     "Ninho:mils4",
@@ -621,7 +627,13 @@
     "L2B:chanel",
     "L2B:fastlife",
     "Djadja & Dinaz:matièrenoire",
-    "Tiakola:jsuisplusdansça"
+    "Tiakola:jsuisplusdansça",
+    "Ninho:bantumentalité",
+    "SDM:ininfinitum",
+    "SDM:635",
+    "SDM:chicharito",
+    "Tiakola:elclassico",
+    "Leto:quotidiendubendo"
   ],
   "videos": [],
   "news": [
@@ -933,10 +945,13 @@
       }
     },
     "2026-11": {
-      "releases": 3,
+      "releases": 9,
       "per_artist": {
         "L2B": 2,
-        "Tiakola": 1
+        "Tiakola": 2,
+        "Ninho": 1,
+        "SDM": 3,
+        "Leto": 1
       }
     }
   }
