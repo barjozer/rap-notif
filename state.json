@@ -315,7 +315,8 @@
     "1143579291",
     "1143587521",
     "1120569002",
-    "1136897661"
+    "1136897661",
+    "1145124091"
   ],
   "titles": [
     "Ninho:mils4",
@@ -633,7 +634,8 @@
     "SDM:635",
     "SDM:chicharito",
     "Tiakola:elclassico",
-    "Leto:quotidiendubendo"
+    "Leto:quotidiendubendo",
+    "L2B:çafaitmal"
   ],
   "videos": [],
   "news": [
@@ -947,9 +949,9 @@
       }
     },
     "2026-11": {
-      "releases": 9,
+      "releases": 10,
       "per_artist": {
-        "L2B": 2,
+        "L2B": 3,
         "Tiakola": 2,
         "Ninho": 1,
         "SDM": 3,
