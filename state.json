@@ -317,7 +317,8 @@
     "1120569002",
     "1136897661",
     "1145124091",
-    "1146155171"
+    "1146155171",
+    "1150207991"
   ],
   "titles": [
     "Ninho:mils4",
@@ -637,7 +638,8 @@
     "Tiakola:elclassico",
     "Leto:quotidiendubendo",
     "L2B:çafaitmal",
-    "Ninho:mils4"
+    "Ninho:mils4",
+    "Bouss:hypnotisé"
   ],
   "videos": [],
   "news": [
@@ -834,7 +836,8 @@
     "CBMiS0FVX3lxTE56YXJjMlVFc3RhQzZXQjJrM3VTUnVOU3ZaVkxyYmVLQ3h5RV93bWptRnZ6QUtnV0ZqUXFqSHpic0ZjaVltWUNGNUV3Yw",
     "CBMiygFBVV95cUxPb21XcWJ6SHhrcG5mTUJtazFnZFB0TWtmekVfRmhpTmVZOW5fTUNwanNYbzlyTUFRRXBldXdaRWRZSHQxdFl5OUl4VDIzb0NEOEhQeUVVQTFCMjAyREhXa3VzbWtPRjhQTTF5cklTX1k2NXNnMERDbDJ0RlB2SXhuT201bEN3QlBPN2owM3VoQnV1OFdJZGstNlMxODNXc2lvNVdzWUpnQTlZZkRXdUpkSTZXUlRHV05aZ1FzR19Bb2ZfdUZaN3pmYUFR",
     "CBMijAFBVV95cUxPWUJhdldrMHhjR29HS0JjaEhwWXZmOTlFNjJHclVCN3NNamF2ZWJ0RDk3SFdkQTVvZS1nZ2ZQN3AwcEdhN05Nbmo5cmdpbWpWclo3N08xcDZTQVpSbmw4YjA0VXVQWGhnMnBVVThRU1luWTdXOEFEQkszcTdjRVY4aUlySW5OTEtkVWVicw",
-    "CBMid0FVX3lxTFB3UXU4UWVyTGI2THFINUxiTmxKLVVmeFV6VVlNUk1vUHRwdFNFbF9nVWpXYy1yUS1CVTAtVGtVSV9tTWY1ZWRJTnhKNG5YS1Fzb196MndKV0RXMW1zX18zUGE2WUNadElQcGtSejVKeHV1ZmtYR3Q4"
+    "CBMid0FVX3lxTFB3UXU4UWVyTGI2THFINUxiTmxKLVVmeFV6VVlNUk1vUHRwdFNFbF9nVWpXYy1yUS1CVTAtVGtVSV9tTWY1ZWRJTnhKNG5YS1Fzb196MndKV0RXMW1zX18zUGE2WUNadElQcGtSejVKeHV1ZmtYR3Q4",
+    "CBMidEFVX3lxTE9CdUNFX0tZYWdPU2RUNzhuLXpKVkZDU0V3TFAwV2EwSDA1b3hwRmN1NDc3TW5vYVc4RTZHY3ZoeFgyNDV3bUNfVWpkNHZxUVp0aE01aWRRQ0RZQUxuS0xIWmRTRjNFbXRlZFc1M1V4bGpEbVhi"
   ],
   "deezer_artists": {
     "Ninho": {
@@ -952,13 +955,14 @@
       }
     },
     "2026-11": {
-      "releases": 10,
+      "releases": 11,
       "per_artist": {
         "L2B": 3,
         "Tiakola": 2,
         "Ninho": 1,
         "SDM": 3,
-        "Leto": 1
+        "Leto": 1,
+        "Bouss": 1
       }
     }
   }
